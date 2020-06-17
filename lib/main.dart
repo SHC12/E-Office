@@ -1,3 +1,4 @@
+import 'package:e_office/dashboard.dart';
 import 'package:e_office/home.dart';
 import 'package:e_office/login_page.dart';
 import 'package:flutter/material.dart';
@@ -11,5 +12,5 @@ Future<void> main() async {
   
   print(email);
   runApp(
-    MaterialApp(home: email == null ? LoginPage() : HomePage()));
+    MaterialApp(home: email == null ? LoginPage() : MyDashboard()));
 }

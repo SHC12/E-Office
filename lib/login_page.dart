@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:e_office/dashboard.dart';
 import 'package:e_office/home.dart';
 import 'package:e_office/model/login_result.dart';
 import 'package:flutter/material.dart';
@@ -58,7 +59,7 @@ class _LoginPageState extends State<LoginPage> {
     Map data = {'username': username, 'password': password};
     var jsonResponse = null;
     var response = await http.post(
-        "http://simpel.pasamanbaratkab.go.id/api_android/simaya/model_login.php",
+        "https://simpel.pasamanbaratkab.go.id/api_android/simaya/model_login.php",
         body: data);
 
     jsonResponse = json.decode(response.body);
@@ -87,7 +88,7 @@ class _LoginPageState extends State<LoginPage> {
             "nama_lengkap", jsonResponse['nama_lengkap']);
 
         Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (BuildContext context) => HomePage()),
+            MaterialPageRoute(builder: (BuildContext context) => MyDashboard()),
             (Route<dynamic> route) => false);
       }
     } else {

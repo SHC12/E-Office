@@ -1,9 +1,12 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:e_office/model/Pdf_surat_masuk.dart';
 import 'package:e_office/simpel/simpel_buka_surat.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_plugin_pdf_viewer/flutter_plugin_pdf_viewer.dart';
+
+// import 'package:flutter_plugin_pdf_viewer/flutter_plugin_pdf_viewer.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:http/http.dart' as http;
 import 'package:dio/dio.dart';
@@ -44,7 +47,7 @@ class SimpelDetailSuratMasuk extends StatefulWidget {
 
   @override
   _SimpelDetailSuratMasukState createState() =>
-      _SimpelDetailSuratMasukState(surat_link);
+      _SimpelDetailSuratMasukState(surat_link, surat_name);
 }
 
 class _SimpelDetailSuratMasukState extends State<SimpelDetailSuratMasuk> {
@@ -53,8 +56,10 @@ class _SimpelDetailSuratMasukState extends State<SimpelDetailSuratMasuk> {
   //String surat_link2;
 
   String surat_link;
+  String surat_name;
+  String pathPDF = "";
 
-  _SimpelDetailSuratMasukState(this.surat_link);
+  _SimpelDetailSuratMasukState(this.surat_link, this.surat_name);
 
   bool downloading = false;
   var progressString = "";
@@ -63,9 +68,37 @@ class _SimpelDetailSuratMasukState extends State<SimpelDetailSuratMasuk> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    createFileOfPdfUrl().then((f) {
+      setState(() {
+        pathPDF = f.path;
+        print(pathPDF);
+      });
+    });
 
-    downloadFile();
+    //downloadFile();
+    //download();
   }
+
+Future<File> createFileOfPdfUrl() async {
+    final url = surat_link;
+    final filename = url.substring(url.lastIndexOf("/") + 1);
+    var request = await HttpClient().getUrl(Uri.parse(url));
+    var response = await request.close();
+    var bytes = await consolidateHttpClientResponseBytes(response);
+    String dir = (await getApplicationDocumentsDirectory()).path;
+    File file = new File('$dir/$filename');
+    await file.writeAsBytes(bytes);
+    return file;
+  }
+  Future<void> download() async{
+    var dir = await getExternalStorageDirectory();
+
+    Dio dio = new Dio();
+    dio.download(surat_link, "${dir.path}/"+surat_name);
+
+    print("Surat Link : " + surat_link + "\n Surat Name : " + surat_name + "\n dir : ${dir.path} ");
+  }
+  
 
   Future<void> downloadFile() async {
     Dio dio = Dio();
@@ -104,20 +137,23 @@ class _SimpelDetailSuratMasukState extends State<SimpelDetailSuratMasuk> {
               ? Container(
                   height: 120.0,
                   width: 200.0,
-                  child: Card(
-                    color: Colors.black,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        CircularProgressIndicator(),
-                        SizedBox(
-                          height: 20.0,
-                        ),
-                        Text(
-                          "Mohon Tunggu....",
-                          style: TextStyle(color: Colors.white),
-                        )
-                      ],
+                  child: Center(
+                    child: Card(
+                      color: Colors.black,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          Center(child: CircularProgressIndicator()),
+                          SizedBox(
+                            height: 20.0,
+                          ),
+                          Text(
+                            "Mohon Tunggu....",
+                            style: TextStyle(color: Colors.white),
+                          )
+                        ],
+                      ),
                     ),
                   ),
                 )
@@ -237,7 +273,7 @@ class _SimpelDetailSuratMasukState extends State<SimpelDetailSuratMasuk> {
 
                                   Navigator.push(context,
                                       MaterialPageRoute(builder: (context) {
-                                    return SimpelBukaSurat(widget.surat_link);
+                                    return SimpelBukaSurat(widget.surat_link, widget.surat_name, pathPDF);
                                   }));
                                 },
                               )
@@ -266,6 +302,7 @@ class _SimpelDetailSuratMasukState extends State<SimpelDetailSuratMasuk> {
   }
 
 }
+
 /*
 saveSurat(String surat_link) async {
   //String link_surat;
