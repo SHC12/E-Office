@@ -1,4 +1,5 @@
 import 'package:e_office/absensi_online/kehadiran.dart';
+import 'package:e_office/util/size.dart';
 import 'package:flutter/material.dart';
 
 class DashboardAbsensi extends StatefulWidget {
@@ -31,14 +32,14 @@ class _DashboardAbsensiState extends State<DashboardAbsensi> {
                             TabBar(
                                 indicator: UnderlineTabIndicator(
                                     borderSide: BorderSide(
-                                        color: Color(0xffff0863), width: 4.0),
+                                        color: Colors.blue, width: 4.0),
                                     insets: EdgeInsets.fromLTRB(
-                                        40.0, 20.0, 40.0, 0)),
-                                indicatorWeight: 15,
+                                        Sizes.s40, Sizes.s20, Sizes.s40, 0)),
+                                indicatorWeight: Sizes.s25,
                                 indicatorSize: TabBarIndicatorSize.label,
                                 labelColor: Color(0xff2d386b),
                                 labelStyle: TextStyle(
-                                    fontSize: 12,
+                                    fontSize: Sizes.s15,
                                     letterSpacing: 1.3,
                                     fontWeight: FontWeight.w500),
                                 unselectedLabelColor: Colors.black26,
@@ -46,11 +47,11 @@ class _DashboardAbsensiState extends State<DashboardAbsensi> {
                                   Tab(
                                     text: "KEHADIRAN",
                                     icon: Icon(Icons.perm_contact_calendar,
-                                        size: 40),
+                                        size: Sizes.s30),
                                   ),
                                   Tab(
                                     text: "RIWAYAT",
-                                    icon: Icon(Icons.history, size: 40),
+                                    icon: Icon(Icons.history, size: Sizes.s30),
                                   ),
                                 ])
                           ],
