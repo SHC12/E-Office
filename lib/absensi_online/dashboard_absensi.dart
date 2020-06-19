@@ -1,4 +1,5 @@
 import 'package:e_office/absensi_online/kehadiran.dart';
+import 'package:e_office/absensi_online/riwayat.dart';
 import 'package:e_office/util/size.dart';
 import 'package:flutter/material.dart';
 
@@ -64,7 +65,7 @@ class _DashboardAbsensiState extends State<DashboardAbsensi> {
                       child: KehadiranTab(),
                     ),
                     Center(
-                      child: KehadiranTab(),
+                      child: RiwayatTab(),
                     ),
                 ]),
               )),

@@ -1,4 +1,4 @@
-import 'dart:async';
+
 
 import 'hand_hour.dart';
 import 'hand_minute.dart';
@@ -40,7 +40,7 @@ class ClockHands extends StatelessWidget {
 }
 
 //class _ClockHandState extends State<ClockHands> {
-  Timer _timer;
+ // Timer _timer;
 //
 //  _ClockHandState();
 //

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:e_office/dashboard.dart';
 import 'package:e_office/home.dart';
 import 'package:e_office/model/login_result.dart';
+import 'package:e_office/util/size.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -48,7 +49,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget horizontalLine() => Padding(
         padding: EdgeInsets.symmetric(horizontal: 16.0),
         child: Container(
-          width: ScreenUtil.getInstance().setWidth(120),
+          width: ScreenUtil().setWidth(120),
           height: 1.0,
           color: Colors.black26.withOpacity(.2),
         ),
@@ -103,9 +104,16 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     LoginResult loginResult = null;
 
-    ScreenUtil.instance = ScreenUtil.getInstance()..init(context);
-    ScreenUtil.instance =
-        ScreenUtil(width: 750, height: 1334, allowFontScaling: true);
+    // ScreenUtil.instance = ScreenUtil.getInstance()..init(context);
+    // ScreenUtil.instance =
+    //     ScreenUtil(width: 750, height: 1334, allowFontScaling: true);
+
+          ScreenUtil.init(
+      context,
+      width: defaultScreenWidth,
+      height: defaultScreenHeight,
+      allowFontScaling: true,
+    );
     return Scaffold(
       backgroundColor: Colors.white,
       resizeToAvoidBottomPadding: true,
@@ -133,25 +141,26 @@ class _LoginPageState extends State<LoginPage> {
                           children: <Widget>[
                             Image.asset(
                               "assets/logo.png",
-                              width: ScreenUtil.getInstance().setWidth(110),
-                              height: ScreenUtil.getInstance().setHeight(110),
+                             // width: ScreenUtil.getInstance().setWidth(110),
+                              width: ScreenUtil().setWidth(110),
+                              height: ScreenUtil().setHeight(110),
                             ),
                             Text("e-Office Pasaman Barat",
                                 style: TextStyle(
                                     fontFamily: "Poppins-Bold",
                                     fontSize:
-                                        ScreenUtil.getInstance().setSp(46),
+                                        ScreenUtil().setSp(46),
                                     letterSpacing: .6,
                                     fontWeight: FontWeight.bold))
                           ],
                         ),
                         SizedBox(
-                          height: ScreenUtil.getInstance().setHeight(180),
+                          height: ScreenUtil().setHeight(180),
                         ),
                         //FormCard(),
                         Container(
                           width: double.infinity,
-                          height: ScreenUtil.getInstance().setHeight(500),
+                          height: ScreenUtil().setHeight(500),
                           decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(8.0),
@@ -174,17 +183,17 @@ class _LoginPageState extends State<LoginPage> {
                                 Text("Login",
                                     style: TextStyle(
                                         fontSize:
-                                            ScreenUtil.getInstance().setSp(45),
+                                            ScreenUtil().setSp(45),
                                         fontFamily: "Poppins-Bold",
                                         letterSpacing: .6)),
                                 SizedBox(
                                   height:
-                                      ScreenUtil.getInstance().setHeight(30),
+                                      ScreenUtil().setHeight(30),
                                 ),
                                 Text("Username",
                                     style: TextStyle(
                                         fontFamily: "Poppins-Medium",
-                                        fontSize: ScreenUtil.getInstance()
+                                        fontSize: ScreenUtil()
                                             .setSp(26))),
                                 TextFormField(
                                   controller: c_username,
@@ -195,12 +204,12 @@ class _LoginPageState extends State<LoginPage> {
                                 ),
                                 SizedBox(
                                   height:
-                                      ScreenUtil.getInstance().setHeight(30),
+                                      ScreenUtil().setHeight(30),
                                 ),
                                 Text("Kata Sandi",
                                     style: TextStyle(
                                         fontFamily: "Poppins-Medium",
-                                        fontSize: ScreenUtil.getInstance()
+                                        fontSize: ScreenUtil()
                                             .setSp(26))),
                                 TextFormField(
                                   controller: c_password,
@@ -212,14 +221,14 @@ class _LoginPageState extends State<LoginPage> {
                                 ),
                                 SizedBox(
                                   height:
-                                      ScreenUtil.getInstance().setHeight(35),
+                                      ScreenUtil().setHeight(35),
                                 ),
                               ],
                             ),
                           ),
                         ),
                         SizedBox(
-                            height: ScreenUtil.getInstance().setHeight(40)),
+                            height: ScreenUtil().setHeight(40)),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: <Widget>[
@@ -236,8 +245,8 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             InkWell(
                               child: Container(
-                                width: ScreenUtil.getInstance().setWidth(330),
-                                height: ScreenUtil.getInstance().setHeight(100),
+                                width: ScreenUtil().setWidth(330),
+                                height: ScreenUtil().setHeight(100),
                                 decoration: BoxDecoration(
                                     gradient: LinearGradient(colors: [
                                       Color(0xFF17ead9),

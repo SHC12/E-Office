@@ -71,6 +71,7 @@ class Sizes {
         await getSize();
       }
     }
+    
 
     await getSize();
 
@@ -102,6 +103,13 @@ class Sizes {
     defaultScreenWidth: $defaultScreenWidth
     defaultScreenHeight: $defaultScreenHeight
     ''');
+
+    ScreenUtil.init(
+      context,
+      width: defaultScreenWidth,
+      height: defaultScreenHeight,
+      allowFontScaling: true,
+    );
 
     
     
