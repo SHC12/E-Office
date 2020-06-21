@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:convert';
 
+import 'package:connectivity/connectivity.dart';
 import 'package:e_office/dashboard.dart';
 import 'package:e_office/home.dart';
 import 'package:e_office/model/login_result.dart';
@@ -9,11 +11,16 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'util/size.dart';
+import 'util/size.dart';
+import 'util/size.dart';
+import 'util/size.dart';
+import 'util/size.dart';
+
 class LoginPage extends StatefulWidget {
   @override
   _LoginPageState createState() => _LoginPageState();
 }
-
 
 class _LoginPageState extends State<LoginPage> {
   bool _isSelected = false;
@@ -69,35 +76,42 @@ class _LoginPageState extends State<LoginPage> {
       _isLoading = false;
 
       if (jsonResponse != null) {
-      int success = jsonResponse['success'];
+        int success = jsonResponse['success'];
 
-      
-      if (success == 1) {
-        sharedPreferences.setString("message", jsonResponse['message']);
-        sharedPreferences.setString("username", jsonResponse['username']);
-        sharedPreferences.setString("id_instansi", jsonResponse['id_instansi']);
-        sharedPreferences.setString(
-            "nama_instansi", jsonResponse['nama_instansi']);
-        sharedPreferences.setString(
-            "id_jenjang_jabatan", jsonResponse['id_jenjang_jabatan']);
-        sharedPreferences.setString("id_groups", jsonResponse['id_groups']);
-        sharedPreferences.setString("id_kategori", jsonResponse['id_kategori']);
-        sharedPreferences.setString("id_user", jsonResponse['id_user']);
-        sharedPreferences.setString(
-            "username_admin", jsonResponse['username_admin']);
-        sharedPreferences.setString(
-            "nama_lengkap", jsonResponse['nama_lengkap']);
+        if (success == 1) {
+          sharedPreferences.setString("message", jsonResponse['message']);
+          sharedPreferences.setString("username", jsonResponse['username']);
+          sharedPreferences.setString(
+              "id_instansi", jsonResponse['id_instansi']);
+          sharedPreferences.setString(
+              "nama_instansi", jsonResponse['nama_instansi']);
+          sharedPreferences.setString(
+              "id_jenjang_jabatan", jsonResponse['id_jenjang_jabatan']);
+          sharedPreferences.setString("id_groups", jsonResponse['id_groups']);
+          sharedPreferences.setString(
+              "id_kategori", jsonResponse['id_kategori']);
+          sharedPreferences.setString("id_user", jsonResponse['id_user']);
+          sharedPreferences.setString(
+              "username_admin", jsonResponse['username_admin']);
+          sharedPreferences.setString(
+              "nama_lengkap", jsonResponse['nama_lengkap']);
 
-        Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (BuildContext context) => MyDashboard()),
-            (Route<dynamic> route) => false);
+          Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(
+                  builder: (BuildContext context) => MyDashboard()),
+              (Route<dynamic> route) => false);
+        }
+      } else {
+        print(response.body);
       }
-    } else {
-      print(response.body);
-      
-    }
     });
-    
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    Sizes.setScreenAwareConstant(context);
   }
 
   @override
@@ -108,12 +122,14 @@ class _LoginPageState extends State<LoginPage> {
     // ScreenUtil.instance =
     //     ScreenUtil(width: 750, height: 1334, allowFontScaling: true);
 
-          ScreenUtil.init(
+    ScreenUtil.init(
       context,
-      width: defaultScreenWidth,
-      height: defaultScreenHeight,
+      width: screenWidth,
+      height: screenHeight,
       allowFontScaling: true,
     );
+
+    print("width : $screenWidth");
     return Scaffold(
       backgroundColor: Colors.white,
       resizeToAvoidBottomPadding: true,
@@ -141,15 +157,14 @@ class _LoginPageState extends State<LoginPage> {
                           children: <Widget>[
                             Image.asset(
                               "assets/logo.png",
-                             // width: ScreenUtil.getInstance().setWidth(110),
+                              // width: ScreenUtil.getInstance().setWidth(110),
                               width: ScreenUtil().setWidth(110),
                               height: ScreenUtil().setHeight(110),
                             ),
                             Text("e-Office Pasaman Barat",
                                 style: TextStyle(
                                     fontFamily: "Poppins-Bold",
-                                    fontSize:
-                                        ScreenUtil().setSp(46),
+                                    fontSize: FontSize.s29,
                                     letterSpacing: .6,
                                     fontWeight: FontWeight.bold))
                           ],
@@ -182,19 +197,16 @@ class _LoginPageState extends State<LoginPage> {
                               children: <Widget>[
                                 Text("Login",
                                     style: TextStyle(
-                                        fontSize:
-                                            ScreenUtil().setSp(45),
+                                        fontSize: ScreenUtil().setSp(45),
                                         fontFamily: "Poppins-Bold",
                                         letterSpacing: .6)),
                                 SizedBox(
-                                  height:
-                                      ScreenUtil().setHeight(30),
+                                  height: ScreenUtil().setHeight(30),
                                 ),
                                 Text("Username",
                                     style: TextStyle(
                                         fontFamily: "Poppins-Medium",
-                                        fontSize: ScreenUtil()
-                                            .setSp(26))),
+                                        fontSize: ScreenUtil().setSp(26))),
                                 TextFormField(
                                   controller: c_username,
                                   decoration: InputDecoration(
@@ -203,14 +215,12 @@ class _LoginPageState extends State<LoginPage> {
                                           color: Colors.grey, fontSize: 12.0)),
                                 ),
                                 SizedBox(
-                                  height:
-                                      ScreenUtil().setHeight(30),
+                                  height: ScreenUtil().setHeight(30),
                                 ),
                                 Text("Kata Sandi",
                                     style: TextStyle(
                                         fontFamily: "Poppins-Medium",
-                                        fontSize: ScreenUtil()
-                                            .setSp(26))),
+                                        fontSize: ScreenUtil().setSp(26))),
                                 TextFormField(
                                   controller: c_password,
                                   obscureText: true,
@@ -220,19 +230,16 @@ class _LoginPageState extends State<LoginPage> {
                                           color: Colors.grey, fontSize: 12.0)),
                                 ),
                                 SizedBox(
-                                  height:
-                                      ScreenUtil().setHeight(35),
+                                  height: ScreenUtil().setHeight(35),
                                 ),
                               ],
                             ),
                           ),
                         ),
-                        SizedBox(
-                            height: ScreenUtil().setHeight(40)),
+                        SizedBox(height: ScreenUtil().setHeight(40)),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: <Widget>[
-                            
                             Row(
                               children: <Widget>[
                                 SizedBox(
@@ -268,9 +275,9 @@ class _LoginPageState extends State<LoginPage> {
                                     MaterialPageRoute(builder: (context) {
                                   return HomePage();
                                 }));*/
-                                setState(() {
-                                  _isLoading = true;
-                                });
+                                      setState(() {
+                                        _isLoading = true;
+                                      });
 
                                       signIn(c_username.text, c_password.text);
                                     },

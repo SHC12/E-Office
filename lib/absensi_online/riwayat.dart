@@ -8,22 +8,23 @@ class RiwayatTab extends StatefulWidget {
 }
 
 class _RiwayatTabState extends State<RiwayatTab> {
-  final double _smallFontSize = ScreenUtil().setSp(20);
-  final double _valFontSize = ScreenUtil().setSp(30);
+  final double _smallFontSize = Sizes.s20;
+  final double _valFontSize = Sizes.s30;
   final FontWeight _smallFontWeight = FontWeight.w500;
   final FontWeight _valFontWeight = FontWeight.w700;
   final Color _fontColor = Color(0xff5b6990);
   final double _smallFontSpacing = 1.3;
   @override
   Widget build(BuildContext context) {
-     ScreenUtil.init(
+    ScreenUtil.init(
       context,
       width: defaultScreenWidth,
       height: defaultScreenHeight,
       allowFontScaling: true,
     );
-   return Container(
-      padding: EdgeInsets.symmetric(horizontal: ScreenUtil().setSp(30), vertical: ScreenUtil().setSp(25)),
+    return Container(
+      padding: EdgeInsets.symmetric(
+          horizontal: ScreenUtil().setSp(30), vertical: ScreenUtil().setSp(25)),
       alignment: Alignment.topCenter,
       child: ListView(
         children: <Widget>[
@@ -47,13 +48,11 @@ class _RiwayatTabState extends State<RiwayatTab> {
                         fontSize: _valFontSize,
                         color: _fontColor,
                       )),
-                  
                 ],
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                 
                   Text("Jumlah Telat",
                       style: TextStyle(
                         fontWeight: _smallFontWeight,
@@ -246,7 +245,6 @@ class GraphPainter extends CustomPainter {
 
       trackBarPath.moveTo(origin, size.height);
       trackBarPath.lineTo(origin, val[i]);
-
 
       origin = origin + size.width * 0.22;
     }

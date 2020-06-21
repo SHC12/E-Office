@@ -2,8 +2,8 @@ import 'package:e_office/util/logs.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-double defaultScreenWidth = 400;
-double defaultScreenHeight = 810;
+double defaultScreenWidth = 750;
+double defaultScreenHeight = 1334;
 double screenWidth = defaultScreenWidth;
 double screenHeight = defaultScreenHeight;
 
@@ -57,7 +57,7 @@ class Sizes {
   static EdgeInsets spacingAllDefault = EdgeInsets.all(s8);
   static EdgeInsets spacingAllSmall = EdgeInsets.all(s10);
   static EdgeInsets spacingAllExtraSmall = EdgeInsets.all(s10);
-  static EdgeInsets spacingClock = EdgeInsets.symmetric(horizontal : s80);
+  static EdgeInsets spacingClock = EdgeInsets.symmetric(horizontal: s80);
 
   static Future setScreenAwareConstant(context) async {
     screenWidth = MediaQuery.of(context).size.width;
@@ -71,7 +71,6 @@ class Sizes {
         await getSize();
       }
     }
-    
 
     await getSize();
 
@@ -110,9 +109,6 @@ class Sizes {
       height: defaultScreenHeight,
       allowFontScaling: true,
     );
-
-    
-    
 
     FontSize.setScreenAwareFontSize();
 
