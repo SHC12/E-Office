@@ -1,16 +1,19 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:connectivity/connectivity.dart';
 import 'package:e_office/absensi_online/clock/clock.dart';
 import 'package:e_office/style.dart';
 import 'package:e_office/util/size.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
+import 'package:http/http.dart' as http;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import 'package:intl/intl.dart';
+import 'package:progress_dialog/progress_dialog.dart';
 
 class KehadiranTab extends StatefulWidget {
   @override
@@ -29,6 +32,14 @@ class _KehadiranTabState extends State<KehadiranTab> {
   String _connectionStatus = 'Unknown';
   final Connectivity _connectivity = Connectivity();
   StreamSubscription<ConnectivityResult> _connectivitySubscription;
+
+  String username;
+  String id_instansi;
+  String nama_lengkap;
+
+  String formattedTime;
+
+  ProgressDialog pr;
 
   @override
   void initState() {
@@ -86,20 +97,72 @@ class _KehadiranTabState extends State<KehadiranTab> {
 
   //     print(now);
   // }
-  void getAbsenMasuk() async {
-    DateTime now = DateTime.now();
-    String formattedTime = DateFormat.Hm().format(now);
 
-    if (wifiName == 'ppp') {
-      setState(() {
-        absen_masuk = formattedTime;
-      });
+  Uri apiUrl = Uri.parse(
+      'https://mobileabsensi.pasamanbaratkab.go.id/api_android/insert_absen_masuk.php');
+  Future<Map<String, dynamic>> _uploadDataAbsenMasuk() async {
+    DateTime now = DateTime.now();
+     formattedTime = DateFormat.Hm().format(now);
+    setState(() {
+      pr.show();
+    });
+
+    final data = http.MultipartRequest('POST', apiUrl);
+
+    data.fields['username'] = 'username';
+    data.fields['jam_masuk'] = '2020-01-01 01:00:00';
+    data.fields['id_instansi'] = '23113';
+    data.fields['nama_lengkap'] = 'nama';
+    data.fields['SSID'] = 'wifiName';
+    data.fields['BSSID'] = 'wifiBSSID';
+    data.fields['waktu_jam_masuk'] = '01:00';
+    data.fields['ip_add'] = 'wifiIP';
+
+    try {
+      final streamedResponse = await data.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      if (response.statusCode != 200) {
+        return null;
+      }
+      final Map<String, dynamic> responseData = json.decode(response.body);
+      String code = responseData['code'];
+      if (code == 1) {
+       _resetState();
+        return responseData;
+      }
+    } catch (e) {
+      print(e);
+      return null;
+    }
+  }
+
+  void getAbsenMasuk() async {
+    if (wifiName == null) {
+      final Map<String, dynamic> response = await _uploadDataAbsenMasuk();
+
+     if (response == null) {
+        pr.hide();
+        setState(() {
+          absen_masuk = formattedTime;
+          print("sukses");
+        });
+      } else {
+        print("gagal");
+      }
     } else {
       setState(() {
         print("gagal");
       });
     }
   }
+  void _resetState() {
+    setState(() {
+      pr.hide();
+    });
+  }
+
+  
+  
 
   void getAbsenPulang() async {
     DateTime now = DateTime.now();
@@ -112,6 +175,21 @@ class _KehadiranTabState extends State<KehadiranTab> {
 
   @override
   Widget build(BuildContext context) {
+    pr = new ProgressDialog(context, type: ProgressDialogType.Normal);
+
+    //Optional
+    pr.style(
+      message: 'Mohon Tunggu...',
+      borderRadius: 10.0,
+      backgroundColor: Colors.white,
+      progressWidget: CircularProgressIndicator(),
+      elevation: 10.0,
+      insetAnimCurve: Curves.easeInOut,
+      progressTextStyle: TextStyle(
+          color: Colors.black, fontSize: 13.0, fontWeight: FontWeight.w400),
+      messageTextStyle: TextStyle(
+          color: Colors.black, fontSize: 19.0, fontWeight: FontWeight.w600),
+    );
     return Container(
       width: screenWidth,
       height: screenHeight,

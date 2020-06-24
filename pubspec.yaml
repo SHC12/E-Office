@@ -38,6 +38,7 @@ dependencies:
   # flutter_pdfview: ^1.0.1
   flutter_full_pdf_viewer: ^1.0.6
   flutter_plugin_pdf_viewer: ^1.0.7
+  progress_dialog: ^1.2.0
   flutter_speed_dial: ^1.2.1
   dio : any
   path_provider: ^1.6.10
