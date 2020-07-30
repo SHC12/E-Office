@@ -26,7 +26,11 @@ dependencies:
  
   intl: ^0.16.1
   wifi_iot: ^0.1.1
-  connectivity: ^0.4.8+6
+  connectivity: ^0.4.9
+  permission_handler: ^5.0.1+1
+ 
+  fluttericon: ^1.0.7
+  cool_alert: ^1.0.1
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -40,7 +44,7 @@ dependencies:
   flutter_plugin_pdf_viewer: ^1.0.7
   progress_dialog: ^1.2.0
   flutter_speed_dial: ^1.2.1
-  dio : any
+  dio: ^3.0.9
   path_provider: ^1.6.10
   google_fonts: ^1.1.0
   font_awesome_flutter: ^8.8.1

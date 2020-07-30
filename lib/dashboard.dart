@@ -1,13 +1,14 @@
 import 'package:e_office/absensi_online/dashboard_absensi.dart';
+import 'package:e_office/absensi_online/dashboard_admin.dart';
 import 'package:e_office/animations/fadeanimations.dart';
 import 'package:e_office/simpel/simpel_dashboard.dart';
 import 'package:e_office/style.dart';
 import 'package:e_office/top.dart';
 import 'package:flutter/material.dart';
 
-
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MyDashboard extends StatelessWidget {
   @override
@@ -30,6 +31,27 @@ class Dashboard extends StatefulWidget {
 }
 
 class _DashboardState extends State<Dashboard> {
+  SharedPreferences pref;
+  String id_user, id_groups, id_instansi, id_kategori;
+
+  dataAkun() async {
+    pref = await SharedPreferences.getInstance();
+
+    setState(() {
+      id_user = pref.getString('id_user') ?? '0';
+      id_groups = pref.getString('id_groups') ?? '0';
+      id_instansi = pref.getString('id_instansi') ?? '0';
+      id_kategori = pref.getString('id_kategori') ?? '0';
+    });
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    dataAkun();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -40,7 +62,7 @@ class _DashboardState extends State<Dashboard> {
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-           TopWidget(),
+            TopWidget(),
             SizedBox(height: 24),
             _title('Aplikasi'),
             SizedBox(height: 12),
@@ -48,8 +70,9 @@ class _DashboardState extends State<Dashboard> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                _simpelCard('SiMPEL', 'assets/simpel.jpg'),
-                _absensiCard('Absensi Online', 'assets/image_02.png'),
+                _simpelCard('SiMPEL', 'assets/simpel_trans.png'),
+                _absensiCard('Absensi Online', 'assets/image_02.png', id_groups,
+                    id_kategori),
               ],
             ),
             SizedBox(height: 12),
@@ -92,7 +115,6 @@ class _DashboardState extends State<Dashboard> {
             child: Align(
               alignment: Alignment.bottomCenter,
               child: Image.asset(assetUrl, height: 80, fit: BoxFit.fitHeight),
-              
             ),
           ),
           SizedBox(height: 12),
@@ -138,8 +160,8 @@ class _DashboardState extends State<Dashboard> {
                   ]),
               child: Align(
                 alignment: Alignment.bottomCenter,
-                child: Image.asset(assetUrl, height: 80, fit: BoxFit.fitHeight),
-            
+                child:
+                    Image.asset(assetUrl, height: 100, fit: BoxFit.fitHeight),
               ),
             ),
             SizedBox(height: 12),
@@ -158,11 +180,18 @@ class _DashboardState extends State<Dashboard> {
       ),
     );
   }
-  _absensiCard(String title, String assetUrl) {
+
+  _absensiCard(
+      String title, String assetUrl, String id_groupss, String id_kategorii) {
     return GestureDetector(
       onTap: () {
-        Navigator.push(context,
-            MaterialPageRoute(builder: (context) => DashboardAbsensi()));
+        if (id_groupss == '2' && id_kategorii == '4') {
+          Navigator.push(context,
+              MaterialPageRoute(builder: (context) => DashboardAdminAbsensi()));
+        } else {
+          Navigator.push(context,
+              MaterialPageRoute(builder: (context) => DashboardAbsensi()));
+        }
       },
       child: FadeAnimation(
         1,
@@ -186,7 +215,6 @@ class _DashboardState extends State<Dashboard> {
               child: Align(
                 alignment: Alignment.bottomCenter,
                 child: Image.asset(assetUrl, height: 80, fit: BoxFit.fitHeight),
-            
               ),
             ),
             SizedBox(height: 12),

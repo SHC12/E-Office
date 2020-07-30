@@ -37,69 +37,76 @@ class _TopWidgetState extends State<TopWidget> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            FadeAnimation(
-              1,
-              Expanded(
-                child: Text(
-                  'Halo! ' + nama_lengkap,
-                  overflow: TextOverflow.ellipsis,
-                  softWrap: false,
-                  style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w600),
+        Flexible(
+          flex: 2,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              FadeAnimation(
+                1,
+                Expanded(
+                  child: Text(
+                    'Halo! ' + nama_lengkap,
+                    overflow: TextOverflow.ellipsis,
+                    softWrap: false,
+                    style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w600),
+                  ),
                 ),
               ),
-            ),
-            FadeAnimation(
-              1,
-              Text(
-                nama_jabatan,
-                style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w400),
+              FadeAnimation(
+                1,
+                Text(
+                  nama_jabatan,
+                  style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400),
+                ),
               ),
-            ),
-          ],
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: <Widget>[
-            FadeAnimation(
-              1,
-              Icon(
-                FontAwesomeIcons.bell,
-                size: 24,
-                color: Colors.blueGrey,
-              ),
-              
-            ),SizedBox(width: 12),
-         FadeAnimation(
-          1,
-          GestureDetector(
-            onTap: (){
-              sharedPreferences.clear();
-              sharedPreferences.commit();
-              Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (BuildContext context) => LoginPage()), (Route<dynamic> route) => false);
-            },
-                      child: Icon(
-              FontAwesomeIcons.signOutAlt,
-              size: 24,
-              color: Colors.blueGrey,
-            ),
+            ],
           ),
-        )
-          ],
+        ),
+        Flexible(
+          flex: 1,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              FadeAnimation(
+                1,
+                Icon(
+                  FontAwesomeIcons.bell,
+                  size: 24,
+                  color: Colors.blueGrey,
+                ),
+              ),
+              SizedBox(width: 12),
+              FadeAnimation(
+                1,
+                GestureDetector(
+                  onTap: () {
+                    sharedPreferences.clear();
+                    sharedPreferences.commit();
+                    Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(
+                            builder: (BuildContext context) => LoginPage()),
+                        (Route<dynamic> route) => false);
+                  },
+                  child: Icon(
+                    FontAwesomeIcons.signOutAlt,
+                    size: 24,
+                    color: Colors.blueGrey,
+                  ),
+                ),
+              )
+            ],
+          ),
         ),
       ],
     );
   }
-
-  
 }

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:connectivity/connectivity.dart';
+import 'package:cool_alert/cool_alert.dart';
 import 'package:e_office/absensi_online/clock/clock.dart';
 import 'package:e_office/style.dart';
 import 'package:e_office/util/size.dart';
@@ -13,7 +14,9 @@ import 'package:http/http.dart' as http;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import 'package:intl/intl.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:progress_dialog/progress_dialog.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class KehadiranTab extends StatefulWidget {
   @override
@@ -21,45 +24,136 @@ class KehadiranTab extends StatefulWidget {
 }
 
 class _KehadiranTabState extends State<KehadiranTab> {
-  String _timeString;
+  bool _visible = true;
+
+  String _timeString, _timeStringSql;
   Timer timer;
+
+  String id_groups, id_kategori, id_user, username;
 
   String absen_masuk = "";
   String absen_pulang = "";
   String datetime;
   DateTime now;
-  String wifiName, wifiBSSID, wifiIP;
+  String wifiName, wifiBSSID, wifiIP, wifiSSID;
   String _connectionStatus = 'Unknown';
   final Connectivity _connectivity = Connectivity();
   StreamSubscription<ConnectivityResult> _connectivitySubscription;
 
-  String username;
+  var a = Connectivity().getWifiIP();
+  String rSSID, rBSSID, rIP_ADD;
+
   String id_instansi;
   String nama_lengkap;
+  String username_admin;
+  String jam_masuk;
+
+  String nama_wifi;
+  String bssid;
+  String ip_address;
 
   String formattedTime;
 
   ProgressDialog pr;
+  SharedPreferences pref;
+
+  String url_validasi =
+      "http://mobileabsensi.pasamanbaratkab.go.id/api_android/validasi_absen.php?username_admin=";
+  String url_lengkap;
+
+  String url_jam_masuk =
+      "http://mobileabsensi.pasamanbaratkab.go.id/api_android/get_jam_masuk.php?username=";
+  String url_lengkap_jam_masuk;
+
+  String url_jam_pulang =
+      "http://mobileabsensi.pasamanbaratkab.go.id/api_android/get_jam_pulang.php?username=";
+  String url_lengkap_jam_pulang;
+
+  dataAkun() async {
+    pref = await SharedPreferences.getInstance();
+
+    setState(() {
+      id_user = pref.getString('id_user') ?? '0';
+      username = pref.getString('username') ?? '0';
+      nama_lengkap = pref.getString('nama_lengkap') ?? '0';
+      id_groups = pref.getString('id_groups') ?? '0';
+      id_instansi = pref.getString('id_instansi') ?? '0';
+      id_kategori = pref.getString('id_kategori') ?? '0';
+      username_admin = pref.getString('username_admin') ?? '0';
+    });
+  }
+
+  getWifiTerdaftar() async {
+    pref = await SharedPreferences.getInstance();
+    String ua = pref.getString('username_admin');
+    url_lengkap = url_validasi + ua;
+    var jsonResponse = null;
+
+    var response = await http.get(url_lengkap);
+
+    jsonResponse = json.decode(response.body);
+    if (jsonResponse != null) {
+      setState(() {
+        var data = jsonResponse[0];
+        nama_wifi = data['SSID'];
+        bssid = data['BSSID'];
+        ip_address = data['IP_ADD'];
+      });
+
+      print("SSID" + nama_wifi.toString() + "\n BSSID" + ip_address.toString());
+    }
+  }
+
+  getJamMasuk() async {
+    pref = await SharedPreferences.getInstance();
+    String u = pref.getString('username');
+    url_lengkap_jam_masuk = url_jam_masuk + u;
+    var jsonResponse = null;
+
+    var response = await http.get(url_lengkap_jam_masuk);
+
+    jsonResponse = json.decode(response.body);
+    if (jsonResponse != null) {
+      setState(() {
+        var data = jsonResponse[0];
+
+        if (data['waktu_masuk'] != null) {
+          absen_masuk = data['waktu_masuk'];
+        } else {
+          absen_masuk = "";
+        }
+      });
+    } else {
+      setState(() {
+        absen_masuk = "";
+      });
+    }
+  }
 
   @override
   void initState() {
     // TODO: implement initState
-
+    dataAkun();
+    getWifiTerdaftar();
+    getJamMasuk();
     _timeString = _formatDateTime(DateTime.now());
+    _timeStringSql = _formatDateTimeSql(DateTime.now());
 
     Timer.periodic(Duration(seconds: 1), (Timer t) => _getTime());
-    super.initState();
+
     initConnectivity();
     _connectivitySubscription =
         _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
+    super.initState();
   }
 
   @override
   void dispose() {
     timer = Timer.periodic(Duration(seconds: 1), (Timer t) => _getTime());
     timer.cancel();
-    super.dispose();
+
     _connectivitySubscription.cancel();
+    super.dispose();
   }
 
   Future<void> initConnectivity() async {
@@ -78,45 +172,48 @@ class _KehadiranTabState extends State<KehadiranTab> {
       return Future.value(null);
     }
 
+    // Check to see if Android Location permissions are enabled
+    // Described in https://github.com/flutter/flutter/issues/51529
+    if (Platform.isAndroid) {
+      print('Checking Android permissions');
+      var status = await Permission.location.status;
+      // Blocked?
+      if (status.isUndetermined || status.isDenied || status.isRestricted) {
+        // Ask the user to unblock
+        if (await Permission.location.request().isGranted) {
+          // Either the permission was already granted before or the user just granted it.
+          print('Location permission granted');
+        } else {
+          print('Location permission not granted');
+        }
+      } else {
+        print('Permission already granted (previous execution?)');
+      }
+    }
+
     return _updateConnectionStatus(result);
   }
-
-  // void getAbsenMasuk() async{
-
-  //     Response response = await get('http://worldtimeapi.org/api/timezone/Asia/Jakarta');
-  //     Map data = jsonDecode(response.body);
-
-  //     String datetime = data['datetime'];
-  //     String offset = data['utc_offset'].substring(1,3);
-
-  //     DateTime now = DateTime.parse(datetime).toLocal();
-
-  //     setState(() {
-  //       absen_masuk = now.toString();
-  //     });
-
-  //     print(now);
-  // }
 
   Uri apiUrl = Uri.parse(
       'https://mobileabsensi.pasamanbaratkab.go.id/api_android/insert_absen_masuk.php');
   Future<Map<String, dynamic>> _uploadDataAbsenMasuk() async {
     DateTime now = DateTime.now();
-     formattedTime = DateFormat.Hm().format(now);
+    formattedTime = DateFormat.Hm().format(now);
     setState(() {
       pr.show();
     });
 
     final data = http.MultipartRequest('POST', apiUrl);
 
-    data.fields['username'] = 'username';
-    data.fields['jam_masuk'] = '2020-01-01 01:00:00';
-    data.fields['id_instansi'] = '23113';
-    data.fields['nama_lengkap'] = 'nama';
-    data.fields['SSID'] = 'wifiName';
-    data.fields['BSSID'] = 'wifiBSSID';
-    data.fields['waktu_jam_masuk'] = '01:00';
-    data.fields['ip_add'] = 'wifiIP';
+    data.fields['id_user'] = id_user;
+    data.fields['username'] = username;
+    data.fields['jam_masuk'] = _timeStringSql;
+    data.fields['id_instansi'] = id_instansi;
+    data.fields['nama_lengkap'] = nama_lengkap;
+    data.fields['SSID'] = rSSID;
+    data.fields['BSSID'] = rBSSID;
+    data.fields['waktu_jam_masuk'] = formattedTime;
+    data.fields['ip_add'] = rIP_ADD;
 
     try {
       final streamedResponse = await data.send();
@@ -127,7 +224,7 @@ class _KehadiranTabState extends State<KehadiranTab> {
       final Map<String, dynamic> responseData = json.decode(response.body);
       String code = responseData['code'];
       if (code == 1) {
-       _resetState();
+        _resetState();
         return responseData;
       }
     } catch (e) {
@@ -137,40 +234,104 @@ class _KehadiranTabState extends State<KehadiranTab> {
   }
 
   void getAbsenMasuk() async {
-    if (wifiName == null) {
+    if (rSSID == nama_wifi && rBSSID == bssid) {
       final Map<String, dynamic> response = await _uploadDataAbsenMasuk();
 
-     if (response == null) {
-        pr.hide();
+      if (response == null) {
         setState(() {
+          pr.hide();
+          CoolAlert.show(
+            context: context,
+            title: "Sukses !",
+            type: CoolAlertType.success,
+            text: "Anda telah berhasil melakukan absen masuk !",
+          );
           absen_masuk = formattedTime;
           print("sukses");
         });
       } else {
         print("gagal");
       }
+      // DateTime now = DateTime.now();
+      // formattedTime = DateFormat.Hm().format(now);
+
+      // print('id_user : $id_user\n'
+      //     'username : $username\n'
+      //     'jam_masuk : $_timeStringSql\n'
+      //     'id_instansi : $id_instansi\n'
+      //     'SSID : $rSSID\n'
+      //     'BSSID : $rBSSID\n'
+      //     'IP_ADD : $rIP_ADD\n'
+      //     'jam_masuk : $formattedTime\n'
+      //     'nama_lengkap : $nama_lengkap\n');
     } else {
-      setState(() {
-        print("gagal");
-      });
+      CoolAlert.show(
+        context: context,
+        title: "Gagal !",
+        type: CoolAlertType.error,
+        text:
+            "Silahkan terhubung dengan Wifi $nama_wifi agar dapat melakukan absen!",
+      );
     }
   }
+
   void _resetState() {
     setState(() {
       pr.hide();
     });
   }
 
-  
-  
-
   void getAbsenPulang() async {
-    DateTime now = DateTime.now();
-    String formattedTime = DateFormat.Hm().format(now);
+    if (rSSID == nama_wifi && rBSSID == bssid) {
+      // final Map<String, dynamic> response = await _uploadDataAbsenMasuk();
 
-    setState(() {
-      absen_pulang = formattedTime;
-    });
+      // if (response == null) {
+      //   pr.hide();
+      //   setState(() {
+      //     absen_masuk = formattedTime;
+      //     print("sukses");
+      //   });
+      // } else {
+      //   print("gagal");
+      // }
+
+      DateTime now = DateTime.now();
+      String formattedTimee = DateFormat.Hm().format(now);
+
+      DateTime a = new DateFormat("HH:mm").parse(absen_masuk);
+
+      TimeOfDay _startTime = TimeOfDay(
+          hour: int.parse(absen_masuk.split(":")[0]),
+          minute: int.parse(absen_masuk.split(":")[1]));
+
+      TimeOfDay _endTime = TimeOfDay(
+          hour: int.parse(formattedTimee.split(":")[0]),
+          minute: int.parse(formattedTimee.split(":")[1]));
+
+      int hMasuk = int.parse(absen_masuk.split(":")[0]);
+      int mMasuk = int.parse(absen_masuk.split(":")[1]);
+
+      int hPulang = int.parse(formattedTimee.split(":")[0]);
+      int mPulang = int.parse(formattedTimee.split(":")[1]);
+
+      int totalHKerja = hMasuk - hPulang;
+      int totalMKerja = mMasuk - mPulang;
+
+      var b = DateFormat("HH:mm").format(a);
+
+      var dTotalKerja = Duration(hours: totalHKerja, minutes: totalMKerja);
+
+      var meniTotalKerja = dTotalKerja.abs().inMinutes;
+
+      print('Absen Masuk : $_startTime\n'
+          'Jam Pulang : $formattedTimee\n'
+          'convert date : $a\n'
+          'menit jam masuk : $meniTotalKerja');
+    } else {
+      setState(() {
+        print("gagal");
+      });
+    }
   }
 
   @override
@@ -355,7 +516,7 @@ class _KehadiranTabState extends State<KehadiranTab> {
               onPressed: () {},
             ),
           ),
-          Text('Connection Status: $_connectionStatus'),
+          // Text('Connection Status: $_connectionStatus'),
         ],
       ),
     );
@@ -364,9 +525,11 @@ class _KehadiranTabState extends State<KehadiranTab> {
   void _getTime() {
     final DateTime now = DateTime.now();
     final String formattedDateTime = _formatDateTime(now);
+    final String formattedDateTimeSql = _formatDateTimeSql(now);
     if (mounted) {
       setState(() {
         _timeString = formattedDateTime;
+        _timeStringSql = formattedDateTimeSql;
       });
     }
   }
@@ -375,9 +538,15 @@ class _KehadiranTabState extends State<KehadiranTab> {
     return DateFormat('d/M/yyyy \n HH:mm:ss').format(dateTime);
   }
 
+  String _formatDateTimeSql(DateTime dateTime) {
+    return DateFormat('yyyy-M-d HH:mm:ss').format(dateTime);
+  }
+
   Future<void> _updateConnectionStatus(ConnectivityResult result) async {
+    print('Result: $result');
     switch (result) {
       case ConnectivityResult.wifi:
+        //String wifiName, wifiBSSID, wifiIP;
         try {
           if (Platform.isIOS) {
             LocationAuthorizationStatus status =
@@ -396,9 +565,10 @@ class _KehadiranTabState extends State<KehadiranTab> {
             wifiName = await _connectivity.getWifiName();
           }
         } on PlatformException catch (e) {
-          print(e.toString());
+          print('Error: $e.toString()');
           wifiName = "Failed to get Wifi Name";
         }
+        print('Wi-Fi Name: $wifiName');
 
         try {
           if (Platform.isIOS) {
@@ -421,6 +591,7 @@ class _KehadiranTabState extends State<KehadiranTab> {
           print(e.toString());
           wifiBSSID = "Failed to get Wifi BSSID";
         }
+        print('BSSID: $wifiBSSID');
 
         try {
           wifiIP = await _connectivity.getWifiIP();
@@ -430,10 +601,14 @@ class _KehadiranTabState extends State<KehadiranTab> {
         }
 
         setState(() {
-          _connectionStatus = '$result\n'
-              'Wifi Name: $wifiName\n'
-              'Wifi BSSID: $wifiBSSID\n'
-              'Wifi IP: $wifiIP\n';
+          // _connectionStatus = '$result\n'
+          //     'Wifi Name: $wifiName\n'
+          //     'Wifi BSSID: $wifiBSSID\n'
+          //     'Wifi IP: $wifiIP\n';
+
+          rSSID = wifiName;
+          rBSSID = wifiBSSID;
+          rIP_ADD = wifiIP;
         });
         break;
       case ConnectivityResult.mobile:

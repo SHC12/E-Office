@@ -7,7 +7,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
-
 void main() => runApp(SimpelSuratMasuk());
 
 class SimpelSuratMasuk extends StatefulWidget {
@@ -23,7 +22,7 @@ class _SimpelSuratMasukState extends State<SimpelSuratMasuk> {
     pref = await SharedPreferences.getInstance();
 
     setState(() {
-      id_user = pref.getString('id_user') ?? '0'; 
+      id_user = pref.getString('id_user') ?? '0';
       id_groups = pref.getString('id_groups') ?? '0';
       id_instansi = pref.getString('id_instansi') ?? '0';
     });
@@ -78,10 +77,10 @@ class _SimpelSuratMasukState extends State<SimpelSuratMasuk> {
   Widget build(BuildContext context) {
     return new Scaffold(
       body: Container(
-         padding: EdgeInsets.only(left: 16, top: 54, right: 16),
+        padding: EdgeInsets.only(left: 16, top: 54, right: 16),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             TopWidget(),
             FutureBuilder(
@@ -98,7 +97,7 @@ class _SimpelSuratMasukState extends State<SimpelSuratMasuk> {
                   );
                 } else if (snapshot.hasData) {
                   return Expanded(
-                                      child: ListView.builder(
+                    child: ListView.builder(
                       itemCount: snapshot.data.length,
                       itemBuilder: (BuildContext context, int index) {
                         if (snapshot.data.length > 1) {
@@ -110,19 +109,21 @@ class _SimpelSuratMasukState extends State<SimpelSuratMasuk> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => SimpelDetailSuratMasuk(
-                                        
-                                        snapshot.data[index].token_surat,
-                                        snapshot.data[index].perihal_surat,
-                                        snapshot.data[index].tgl_surat_masuk,
-                                        snapshot.data[index].tgl_surat,
-                                        snapshot.data[index].no_surat_manual,
-                                        snapshot.data[index].nama_naskah,
-                                        snapshot.data[index].nama_pengirim,
-                                        snapshot.data[index].id_surat,
-                                        snapshot.data[index].surat_link,
-                                        snapshot.data[index].surat_name,
-                                        snapshot.data[index].surat_title),
+                                    builder: (context) =>
+                                        SimpelDetailSuratMasuk(
+                                            snapshot.data[index].token_surat,
+                                            snapshot.data[index].perihal_surat,
+                                            snapshot
+                                                .data[index].tgl_surat_masuk,
+                                            snapshot.data[index].tgl_surat,
+                                            snapshot
+                                                .data[index].no_surat_manual,
+                                            snapshot.data[index].nama_naskah,
+                                            snapshot.data[index].nama_pengirim,
+                                            snapshot.data[index].id_surat,
+                                            snapshot.data[index].surat_link,
+                                            snapshot.data[index].surat_name,
+                                            snapshot.data[index].surat_title),
                                   ),
                                 );
                               },
@@ -137,31 +138,34 @@ class _SimpelSuratMasukState extends State<SimpelSuratMasuk> {
                                     ),
                                     padding: new EdgeInsets.all(10.0),
                                     child: new Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: <Widget>[
                                         new Text(
                                           snapshot.data[index].nama_pengirim,
-                                          style: new TextStyle(color: Colors.blue),
+                                          style:
+                                              new TextStyle(color: Colors.blue),
                                         ),
                                         new Container(
                                           padding: EdgeInsets.only(
                                               bottom: 20.0, top: 10.0),
                                           child: Text(
                                             snapshot.data[index].perihal_surat,
-                                            style: new TextStyle(fontSize: 10.0),
+                                            style:
+                                                new TextStyle(fontSize: 10.0),
                                           ),
                                         ),
                                         new Text(
                                           snapshot.data[index].status_penerima,
-                                          style:
-                                              snapshot.data[index].status_penerima ==
-                                                      'Sudah Dibaca'
-                                                  ? new TextStyle(
-                                                      fontSize: 10.0,
-                                                      color: Colors.green)
-                                                  : new TextStyle(
-                                                      fontSize: 10.0,
-                                                      color: Colors.red),
+                                          style: snapshot.data[index]
+                                                      .status_penerima ==
+                                                  'Sudah Dibaca'
+                                              ? new TextStyle(
+                                                  fontSize: 10.0,
+                                                  color: Colors.green)
+                                              : new TextStyle(
+                                                  fontSize: 10.0,
+                                                  color: Colors.red),
                                         ),
                                       ],
                                     ),
@@ -174,7 +178,8 @@ class _SimpelSuratMasukState extends State<SimpelSuratMasuk> {
                             child: Center(
                               child: SizedBox(
                                 width: MediaQuery.of(context).size.width * 0.8,
-                                height: MediaQuery.of(context).size.height * 0.7,
+                                height:
+                                    MediaQuery.of(context).size.height * 0.7,
                                 child: Card(
                                   elevation: 10,
                                   child: Stack(
@@ -184,7 +189,8 @@ class _SimpelSuratMasukState extends State<SimpelSuratMasuk> {
                                         child: Container(
                                           decoration: BoxDecoration(
                                               borderRadius:
-                                                  BorderRadiusDirectional.circular(4)
+                                                  BorderRadiusDirectional
+                                                      .circular(4)
                                               //image: DecorationImage(image: AssetImage("assets/pattern.jpg"))
 
                                               ),
@@ -194,7 +200,8 @@ class _SimpelSuratMasukState extends State<SimpelSuratMasuk> {
                                         child: Text(
                                           "Anda Tidak Memiliki Surat Masuk",
                                           style: TextStyle(
-                                              color: Color(0xFFF56D5D), fontSize: 25),
+                                              color: Color(0xFFF56D5D),
+                                              fontSize: 25),
                                           maxLines: 2,
                                           textAlign: TextAlign.center,
                                         ),
