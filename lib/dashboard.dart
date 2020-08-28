@@ -1,3 +1,5 @@
+import 'package:cool_alert/cool_alert.dart';
+import 'package:device_info/device_info.dart';
 import 'package:e_office/absensi_online/dashboard_absensi.dart';
 import 'package:e_office/absensi_online/dashboard_admin.dart';
 import 'package:e_office/animations/fadeanimations.dart';
@@ -33,6 +35,7 @@ class Dashboard extends StatefulWidget {
 class _DashboardState extends State<Dashboard> {
   SharedPreferences pref;
   String id_user, id_groups, id_instansi, id_kategori;
+  String deviceId;
 
   dataAkun() async {
     pref = await SharedPreferences.getInstance();
@@ -45,10 +48,23 @@ class _DashboardState extends State<Dashboard> {
     });
   }
 
+  Future<String> _getDeviceId() async {
+    DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
+
+    AndroidDeviceInfo androidDeviceInfo = await deviceInfoPlugin.androidInfo;
+
+    return androidDeviceInfo.androidId;
+  }
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    _getDeviceId().then((value) {
+      setState(() {
+        deviceId = value;
+      });
+    });
     dataAkun();
   }
 
@@ -71,7 +87,7 @@ class _DashboardState extends State<Dashboard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 _simpelCard('SiMPEL', 'assets/simpel_trans.png'),
-                _absensiCard('Absensi Online', 'assets/image_02.png', id_groups,
+                _absensiCard('Absensi Online', 'assets/calendar.png', id_groups,
                     id_kategori),
               ],
             ),
@@ -93,42 +109,58 @@ class _DashboardState extends State<Dashboard> {
   }
 
   _promotionCard(String title, String assetUrl) {
-    return FadeAnimation(
-      1,
-      Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: <Widget>[
-          Container(
-            height: 110,
-            width: MediaQuery.of(context).size.width / 2 - 30,
-            decoration: BoxDecoration(
-                color: Color(0XFFDDFF3FF),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black12,
-                    spreadRadius: 2,
-                    blurRadius: 2,
-                  )
-                ]),
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: Image.asset(assetUrl, height: 80, fit: BoxFit.fitHeight),
-            ),
-          ),
-          SizedBox(height: 12),
-          Center(
-            child: Text(
-              title,
-              style: TextStyle(
-                color: Colors.black54,
-                fontWeight: FontWeight.w500,
-                fontSize: 14,
+    return GestureDetector(
+      onTap: () {
+        CoolAlert.show(
+          context: context,
+          title: "Segera Hadir !",
+          type: CoolAlertType.info,
+          text: "Modul sedang dalam tahap pengembangan !",
+        );
+      },
+      child: FadeAnimation(
+        1,
+        Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            GestureDetector(
+              onTap: () {
+                print("device id : $deviceId");
+              },
+              child: Container(
+                height: 110,
+                width: MediaQuery.of(context).size.width / 2 - 30,
+                decoration: BoxDecoration(
+                    color: Color(0XFFDDFF3FF),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        spreadRadius: 2,
+                        blurRadius: 2,
+                      )
+                    ]),
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child:
+                      Image.asset(assetUrl, height: 80, fit: BoxFit.fitHeight),
+                ),
               ),
             ),
-          )
-        ],
+            SizedBox(height: 12),
+            Center(
+              child: Text(
+                title,
+                style: TextStyle(
+                  color: Colors.black54,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 14,
+                ),
+              ),
+            )
+          ],
+        ),
       ),
     );
   }
@@ -136,8 +168,15 @@ class _DashboardState extends State<Dashboard> {
   _simpelCard(String title, String assetUrl) {
     return GestureDetector(
       onTap: () {
-        Navigator.push(context,
-            MaterialPageRoute(builder: (context) => DashboardSimpel()));
+        // Navigator.push(context,
+        //     MaterialPageRoute(builder: (context) => DashboardSimpel()));
+
+        CoolAlert.show(
+          context: context,
+          title: "Segera Hadir !",
+          type: CoolAlertType.info,
+          text: "Modul SiMPEL sedang dalam tahap pengembangan !",
+        );
       },
       child: FadeAnimation(
         1,

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:connectivity/connectivity.dart';
+import 'package:device_info/device_info.dart';
 import 'package:e_office/dashboard.dart';
 import 'package:e_office/home.dart';
 import 'package:e_office/model/login_result.dart';
@@ -29,6 +30,8 @@ class _LoginPageState extends State<LoginPage> {
 
   TextEditingController c_username = TextEditingController();
   TextEditingController c_password = TextEditingController();
+
+  String v_device_id;
 
   void _radio() {
     setState(() {
@@ -62,6 +65,14 @@ class _LoginPageState extends State<LoginPage> {
         ),
       );
 
+  Future<String> _getDeviceId() async {
+    DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
+
+    AndroidDeviceInfo androidDeviceInfo = await deviceInfoPlugin.androidInfo;
+
+    return androidDeviceInfo.androidId;
+  }
+
   signIn(String username, String password) async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
     Map data = {'username': username, 'password': password};
@@ -92,14 +103,16 @@ class _LoginPageState extends State<LoginPage> {
               "id_kategori", jsonResponse['id_kategori']);
           sharedPreferences.setString("id_user", jsonResponse['id_user']);
           sharedPreferences.setString(
+              "id_admin_instansi", jsonResponse['id_admin_instansi']);
+          sharedPreferences.setString(
               "username_admin", jsonResponse['username_admin']);
           sharedPreferences.setString(
               "nama_lengkap", jsonResponse['nama_lengkap']);
 
-          Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(
-                  builder: (BuildContext context) => MyDashboard()),
-              (Route<dynamic> route) => false);
+          String id_user_b = jsonResponse['id_user'];
+          String username_b = jsonResponse['username'];
+
+          auth(id_user_b, username_b, v_device_id);
         }
       } else {
         print(response.body);
@@ -107,10 +120,34 @@ class _LoginPageState extends State<LoginPage> {
     });
   }
 
+  auth(String id_user_a, String username_a, String device_id) async {
+    Map data = {
+      'id_user': id_user_a,
+      'username': username_a,
+      'device_id': device_id
+    };
+    var jsonResponse = null;
+    var response = await http.post(
+        "https://mobileabsensi.pasamanbaratkab.go.id/api_android/post_auth.php",
+        body: data);
+
+    jsonResponse = json.decode(response.body);
+    if (jsonResponse != null) {
+      Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (BuildContext context) => MyDashboard()),
+          (Route<dynamic> route) => false);
+    }
+  }
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
+    _getDeviceId().then((value) {
+      setState(() {
+        v_device_id = value;
+      });
+    });
     Sizes.setScreenAwareConstant(context);
   }
 
@@ -156,17 +193,21 @@ class _LoginPageState extends State<LoginPage> {
                         Row(
                           children: <Widget>[
                             Image.asset(
-                              "assets/logo.png",
+                              "assets/logo_icon.png",
+
                               // width: ScreenUtil.getInstance().setWidth(110),
                               width: ScreenUtil().setWidth(110),
                               height: ScreenUtil().setHeight(110),
                             ),
-                            Text("e-Office Pasaman Barat",
-                                style: TextStyle(
-                                    fontFamily: "Poppins-Bold",
-                                    fontSize: FontSize.s29,
-                                    letterSpacing: .6,
-                                    fontWeight: FontWeight.bold))
+                            FittedBox(
+                              fit: BoxFit.fill,
+                              child: Text("Pasbar Smart Service",
+                                  style: TextStyle(
+                                      fontFamily: "Poppins-Bold",
+                                      fontSize: FontSize.s20,
+                                      letterSpacing: .6,
+                                      fontWeight: FontWeight.bold)),
+                            )
                           ],
                         ),
                         SizedBox(

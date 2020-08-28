@@ -4,12 +4,16 @@ import 'dart:io';
 
 import 'package:connectivity/connectivity.dart';
 import 'package:cool_alert/cool_alert.dart';
+import 'package:device_info/device_info.dart';
 import 'package:e_office/absensi_online/clock/clock.dart';
+import 'package:e_office/absensi_online/clock/ijin.dart';
+import 'package:e_office/absensi_online/dinas_luar.dart';
 import 'package:e_office/style.dart';
 import 'package:e_office/util/size.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -29,10 +33,11 @@ class _KehadiranTabState extends State<KehadiranTab> {
   String _timeString, _timeStringSql;
   Timer timer;
 
-  String id_groups, id_kategori, id_user, username;
+  String id_groups, id_kategori, id_user, id_admin_instansi, username;
 
   String absen_masuk = "";
   String absen_pulang = "";
+  String status_absen = "";
   String datetime;
   DateTime now;
   String wifiName, wifiBSSID, wifiIP, wifiSSID;
@@ -54,12 +59,20 @@ class _KehadiranTabState extends State<KehadiranTab> {
 
   String formattedTime;
 
+  String id_user_validasi_device;
+  String username_validasi_device;
+
   ProgressDialog pr;
   SharedPreferences pref;
 
   String url_validasi =
       "http://mobileabsensi.pasamanbaratkab.go.id/api_android/validasi_absen.php?username_admin=";
   String url_lengkap;
+
+  String url_validasi_device =
+      "https://mobileabsensi.pasamanbaratkab.go.id/api_android/get_validasi_device.php?device_id=";
+  String device_id;
+  String url_lengkap_validasi_device;
 
   String url_jam_masuk =
       "http://mobileabsensi.pasamanbaratkab.go.id/api_android/get_jam_masuk.php?username=";
@@ -69,11 +82,20 @@ class _KehadiranTabState extends State<KehadiranTab> {
       "http://mobileabsensi.pasamanbaratkab.go.id/api_android/get_jam_pulang.php?username=";
   String url_lengkap_jam_pulang;
 
+  Uri apiUrl = Uri.parse(
+      'https://mobileabsensi.pasamanbaratkab.go.id/api_android/insert_absen_masuk.php');
+  Uri apiUrlAbsenPulang = Uri.parse(
+      'https://mobileabsensi.pasamanbaratkab.go.id/api_android/post_absen_pulang.php');
+
+  Uri apiUrlAbsenmasuk = Uri.parse(
+      'https://mobileabsensi.pasamanbaratkab.go.id/api_android/post_absen_masuk.php');
+
   dataAkun() async {
     pref = await SharedPreferences.getInstance();
 
     setState(() {
       id_user = pref.getString('id_user') ?? '0';
+      id_admin_instansi = pref.getString('id_admin_instansi') ?? '0';
       username = pref.getString('username') ?? '0';
       nama_lengkap = pref.getString('nama_lengkap') ?? '0';
       id_groups = pref.getString('id_groups') ?? '0';
@@ -81,6 +103,34 @@ class _KehadiranTabState extends State<KehadiranTab> {
       id_kategori = pref.getString('id_kategori') ?? '0';
       username_admin = pref.getString('username_admin') ?? '0';
     });
+  }
+
+  Future<String> _getDeviceId() async {
+    DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
+
+    AndroidDeviceInfo androidDeviceInfo = await deviceInfoPlugin.androidInfo;
+
+    return androidDeviceInfo.androidId;
+  }
+
+  getValidasiDevice() async {
+    url_lengkap_validasi_device = url_validasi_device + device_id;
+    var jsonResponse = null;
+    var response = await http.get(url_lengkap_validasi_device);
+
+    jsonResponse = json.decode(response.body);
+    if (jsonResponse != null) {
+      setState(() {
+        var data = jsonResponse[0];
+        id_user_validasi_device = data['id_user_validasi'];
+        username_validasi_device = data['username_validasi'];
+      });
+
+      print("id_user_validasi :  " +
+          id_user_validasi_device.toString() +
+          "\n username_validasi :  " +
+          username.toString());
+    }
   }
 
   getWifiTerdaftar() async {
@@ -122,6 +172,39 @@ class _KehadiranTabState extends State<KehadiranTab> {
         } else {
           absen_masuk = "";
         }
+
+        if (data['status_absen'] != null) {
+          status_absen = data['status_absen'];
+        } else {
+          status_absen = "";
+        }
+        print('jam_masuk : $absen_masuk');
+      });
+    } else {
+      setState(() {
+        absen_masuk = "";
+      });
+    }
+  }
+
+  getJamPulan() async {
+    pref = await SharedPreferences.getInstance();
+    String u = pref.getString('username');
+    url_lengkap_jam_pulang = url_jam_pulang + u;
+    var jsonResponse = null;
+
+    var response = await http.get(url_lengkap_jam_pulang);
+
+    jsonResponse = json.decode(response.body);
+    if (jsonResponse != null) {
+      setState(() {
+        var data = jsonResponse[0];
+
+        if (data['waktu_pulang'] != null) {
+          absen_pulang = data['waktu_pulang'];
+        } else {
+          absen_pulang = "";
+        }
       });
     } else {
       setState(() {
@@ -136,6 +219,13 @@ class _KehadiranTabState extends State<KehadiranTab> {
     dataAkun();
     getWifiTerdaftar();
     getJamMasuk();
+    getJamPulan();
+    _getDeviceId().then((value) {
+      setState(() {
+        device_id = value;
+        getValidasiDevice();
+      });
+    });
     _timeString = _formatDateTime(DateTime.now());
     _timeStringSql = _formatDateTimeSql(DateTime.now());
 
@@ -194,26 +284,97 @@ class _KehadiranTabState extends State<KehadiranTab> {
     return _updateConnectionStatus(result);
   }
 
-  Uri apiUrl = Uri.parse(
-      'https://mobileabsensi.pasamanbaratkab.go.id/api_android/insert_absen_masuk.php');
   Future<Map<String, dynamic>> _uploadDataAbsenMasuk() async {
     DateTime now = DateTime.now();
     formattedTime = DateFormat.Hm().format(now);
-    setState(() {
-      pr.show();
-    });
+    setState(() {});
 
-    final data = http.MultipartRequest('POST', apiUrl);
+    final data = http.MultipartRequest('POST', apiUrlAbsenmasuk);
 
     data.fields['id_user'] = id_user;
     data.fields['username'] = username;
-    data.fields['jam_masuk'] = _timeStringSql;
-    data.fields['id_instansi'] = id_instansi;
+    data.fields['id_admin_instansi'] = id_admin_instansi;
     data.fields['nama_lengkap'] = nama_lengkap;
+    data.fields['instansi'] = id_instansi;
     data.fields['SSID'] = rSSID;
     data.fields['BSSID'] = rBSSID;
-    data.fields['waktu_jam_masuk'] = formattedTime;
     data.fields['ip_add'] = rIP_ADD;
+    data.fields['jam_masuk'] = formattedTime;
+    data.fields['tgl_absen'] = _timeStringSql;
+
+    try {
+      final streamedResponse = await data.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      if (response.statusCode != 200) {
+        return null;
+      }
+      final Map<String, dynamic> responseData = json.decode(response.body);
+      String code = responseData['code'];
+      if (code == 1) {
+        _resetState();
+        return responseData;
+      }
+    } catch (e) {
+      print(e);
+      return null;
+    }
+  }
+  // Future<Map<String, dynamic>> _uploadDataAbsenMasuk() async {
+  //   DateTime now = DateTime.now();
+  //   formattedTime = DateFormat.Hm().format(now);
+  //   setState(() {});
+
+  //   final data = http.MultipartRequest('POST', apiUrl);
+
+  //   data.fields['id_user'] = id_user;
+  //   data.fields['username'] = username;
+  //   data.fields['jam_masuk'] = _timeStringSql;
+  //   data.fields['id_instansi'] = id_instansi;
+  //   data.fields['nama_lengkap'] = nama_lengkap;
+  //   data.fields['SSID'] = rSSID;
+  //   data.fields['BSSID'] = rBSSID;
+  //   data.fields['waktu_jam_masuk'] = formattedTime;
+  //   data.fields['ip_add'] = rIP_ADD;
+
+  //   try {
+  //     final streamedResponse = await data.send();
+  //     final response = await http.Response.fromStream(streamedResponse);
+  //     if (response.statusCode != 200) {
+  //       return null;
+  //     }
+  //     final Map<String, dynamic> responseData = json.decode(response.body);
+  //     String code = responseData['code'];
+  //     if (code == 1) {
+  //       _resetState();
+  //       return responseData;
+  //     }
+  //   } catch (e) {
+  //     print(e);
+  //     return null;
+  //   }
+  // }
+
+  Future<Map<String, dynamic>> _uploadDataAbsenPulang() async {
+    DateTime now = DateTime.now();
+    formattedTime = DateFormat.Hm().format(now);
+
+    int hMasuk = int.parse(absen_masuk.split(":")[0]);
+    int mMasuk = int.parse(absen_masuk.split(":")[1]);
+
+    int hPulang = int.parse(formattedTime.split(":")[0]);
+    int mPulang = int.parse(formattedTime.split(":")[1]);
+
+    int totalHKerja = hMasuk - hPulang;
+    int totalMKerja = mMasuk - mPulang;
+
+    var dTotalKerja = Duration(hours: totalHKerja, minutes: totalMKerja);
+
+    var meniTotalKerja = dTotalKerja.abs().inMinutes;
+
+    final data = http.MultipartRequest('POST', apiUrlAbsenPulang);
+
+    data.fields['jam_pulang'] = formattedTime;
+    data.fields['waktu_kerja'] = meniTotalKerja.toString();
 
     try {
       final streamedResponse = await data.send();
@@ -234,19 +395,98 @@ class _KehadiranTabState extends State<KehadiranTab> {
   }
 
   void getAbsenMasuk() async {
+    pref = await SharedPreferences.getInstance();
+    String id_user_am = pref.getString('id_user');
+    String username_am = pref.getString('username');
+    if (id_user_am == id_user_validasi_device) {
+      if (status_absen == '2') {
+        CoolAlert.show(
+          context: context,
+          title: "Info !",
+          type: CoolAlertType.info,
+          text:
+              "Anda tidak bisa melakukan absen karena anda masih dalam status dinas luar !",
+        );
+      } else if (status_absen == '3') {
+        CoolAlert.show(
+          context: context,
+          title: "Info !",
+          type: CoolAlertType.info,
+          text:
+              "Anda tidak bisa melakukan absen karena anda masih dalam status ijin !",
+        );
+      } else {
+        if (rSSID == nama_wifi && rBSSID == bssid) {
+          final Map<String, dynamic> response = await _uploadDataAbsenMasuk();
+
+          if (response == null) {
+            setState(() {
+              CoolAlert.show(
+                context: context,
+                title: "Sukses !",
+                type: CoolAlertType.success,
+                text: "Anda telah berhasil melakukan absen masuk !",
+              );
+              absen_masuk = formattedTime;
+              print("sukses");
+            });
+          } else {
+            print("gagal");
+          }
+          // DateTime now = DateTime.now();
+          // formattedTime = DateFormat.Hm().format(now);
+
+          // print('id_user : $id_user\n'
+          //     'username : $username\n'
+          //     'jam_masuk : $_timeStringSql\n'
+          //     'id_instansi : $id_instansi\n'
+          //     'SSID : $rSSID\n'
+          //     'BSSID : $rBSSID\n'
+          //     'IP_ADD : $rIP_ADD\n'
+          //     'jam_masuk : $formattedTime\n'
+          //     'nama_lengkap : $nama_lengkap\n');
+        } else {
+          CoolAlert.show(
+            context: context,
+            title: "Gagal !",
+            type: CoolAlertType.error,
+            text:
+                "Silahkan terhubung dengan Wifi $nama_wifi agar dapat melakukan absen!",
+          );
+        }
+      }
+    } else {
+      CoolAlert.show(
+        context: context,
+        title: "Gagal !",
+        type: CoolAlertType.error,
+        text:
+            "Anda tidak dapat melakukan absen pada perangkat ini, silahkan hubungi admin instansi anda!",
+      );
+    }
+  }
+
+  void postAbsenPulang() async {
     if (rSSID == nama_wifi && rBSSID == bssid) {
-      final Map<String, dynamic> response = await _uploadDataAbsenMasuk();
+      if (absen_masuk == null) {
+        CoolAlert.show(
+          context: context,
+          title: "Info !",
+          type: CoolAlertType.info,
+          text: "Silahkan lakukan absen masuk terlebih dahulu !",
+        );
+      }
+      final Map<String, dynamic> response = await _uploadDataAbsenPulang();
 
       if (response == null) {
         setState(() {
-          pr.hide();
           CoolAlert.show(
             context: context,
             title: "Sukses !",
             type: CoolAlertType.success,
-            text: "Anda telah berhasil melakukan absen masuk !",
+            text: "Anda telah berhasil melakukan absen pulang !",
           );
-          absen_masuk = formattedTime;
+          absen_pulang = formattedTime;
           print("sukses");
         });
       } else {
@@ -276,81 +516,11 @@ class _KehadiranTabState extends State<KehadiranTab> {
   }
 
   void _resetState() {
-    setState(() {
-      pr.hide();
-    });
-  }
-
-  void getAbsenPulang() async {
-    if (rSSID == nama_wifi && rBSSID == bssid) {
-      // final Map<String, dynamic> response = await _uploadDataAbsenMasuk();
-
-      // if (response == null) {
-      //   pr.hide();
-      //   setState(() {
-      //     absen_masuk = formattedTime;
-      //     print("sukses");
-      //   });
-      // } else {
-      //   print("gagal");
-      // }
-
-      DateTime now = DateTime.now();
-      String formattedTimee = DateFormat.Hm().format(now);
-
-      DateTime a = new DateFormat("HH:mm").parse(absen_masuk);
-
-      TimeOfDay _startTime = TimeOfDay(
-          hour: int.parse(absen_masuk.split(":")[0]),
-          minute: int.parse(absen_masuk.split(":")[1]));
-
-      TimeOfDay _endTime = TimeOfDay(
-          hour: int.parse(formattedTimee.split(":")[0]),
-          minute: int.parse(formattedTimee.split(":")[1]));
-
-      int hMasuk = int.parse(absen_masuk.split(":")[0]);
-      int mMasuk = int.parse(absen_masuk.split(":")[1]);
-
-      int hPulang = int.parse(formattedTimee.split(":")[0]);
-      int mPulang = int.parse(formattedTimee.split(":")[1]);
-
-      int totalHKerja = hMasuk - hPulang;
-      int totalMKerja = mMasuk - mPulang;
-
-      var b = DateFormat("HH:mm").format(a);
-
-      var dTotalKerja = Duration(hours: totalHKerja, minutes: totalMKerja);
-
-      var meniTotalKerja = dTotalKerja.abs().inMinutes;
-
-      print('Absen Masuk : $_startTime\n'
-          'Jam Pulang : $formattedTimee\n'
-          'convert date : $a\n'
-          'menit jam masuk : $meniTotalKerja');
-    } else {
-      setState(() {
-        print("gagal");
-      });
-    }
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    pr = new ProgressDialog(context, type: ProgressDialogType.Normal);
-
-    //Optional
-    pr.style(
-      message: 'Mohon Tunggu...',
-      borderRadius: 10.0,
-      backgroundColor: Colors.white,
-      progressWidget: CircularProgressIndicator(),
-      elevation: 10.0,
-      insetAnimCurve: Curves.easeInOut,
-      progressTextStyle: TextStyle(
-          color: Colors.black, fontSize: 13.0, fontWeight: FontWeight.w400),
-      messageTextStyle: TextStyle(
-          color: Colors.black, fontSize: 19.0, fontWeight: FontWeight.w600),
-    );
     return Container(
       width: screenWidth,
       height: screenHeight,
@@ -456,7 +626,17 @@ class _KehadiranTabState extends State<KehadiranTab> {
                               padding: EdgeInsets.all(Sizes.s20),
                               child: GestureDetector(
                                 onTap: () {
-                                  getAbsenPulang();
+                                  if (absen_masuk == "") {
+                                    CoolAlert.show(
+                                      context: context,
+                                      title: "Info !",
+                                      type: CoolAlertType.info,
+                                      text:
+                                          "Silahkan melakukan absen masuk terlebih dahulu",
+                                    );
+                                  } else {
+                                    postAbsenPulang();
+                                  }
                                 },
                                 child: Center(
                                   child: Icon(FontAwesomeIcons.fingerprint,
@@ -497,7 +677,10 @@ class _KehadiranTabState extends State<KehadiranTab> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(50),
               ),
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => DinasLuar()));
+              },
             ),
           ),
           Padding(
@@ -513,7 +696,9 @@ class _KehadiranTabState extends State<KehadiranTab> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(50),
               ),
-              onPressed: () {},
+              onPressed: () {
+                Get.to(Ijin());
+              },
             ),
           ),
           // Text('Connection Status: $_connectionStatus'),
